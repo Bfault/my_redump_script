@@ -1,0 +1,112 @@
+#! /usr/bin/env python3
+
+import subprocess
+import traceback
+import os
+
+wallpaper_addr = "https://cutewallpaper.org/21/arch-linux-wallpaper-1920x1080/Arch-Linux-Wallpaper-on-WallpaperGet.com.jpg"
+user = os.environ["USER"]
+
+
+def delete_app():
+    apt_packages = {"firefox"}
+
+    packages = {"uninstaller": "sudo apt purge -y".split(" "), "name": apt_packages}
+
+    for package in packages:
+        for package_name in packages["name"]:
+            subprocess.run(packages["uninstaller"] + [package_name], check=True)
+
+
+def download_app():
+    apt_packages = {"vim", "pip", "curl", "git", "zsh"}
+    snap_packages = {"postman", "brave", "spotify", "discord"}
+    snap_classic_packages = {"code"}
+
+    packages = (
+        {"installer": "sudo apt install -y".split(" "), "name": apt_packages},
+        {"installer": "sudo snap install".split(" "), "name": snap_packages},
+        {
+            "installer": "sudo snap install --classic".split(" "),
+            "name": snap_classic_packages,
+        },
+    )
+
+    for package in packages:
+        for package_name in package["name"]:
+            subprocess.run(package["installer"] + [package_name], check=True)
+
+
+def modify_settings():
+    subprocess.run(
+        "gsettings set org.gnome.desktop.session idle-delay 0".split(" "),
+        check=True,
+    )
+    subprocess.run(
+        "gsettings set org.gnome.desktop.interface gtk-theme 'Adwaita-dark'".split(" "),
+        check=True,
+    )
+    subprocess.run(
+        f"curl {wallpaper_addr} --output /home/{user}/Downloads/wallpaper.jpg".split(
+            " "
+        ),
+        check=True,
+    )
+    subprocess.run(
+        f"gsettings set org.gnome.desktop.background picture-uri file:///home/{user}/Downloads/wallpaper.jpg".split(
+            " "
+        ),
+        check=True,
+    )
+
+
+def do_thing():
+    subprocess.run(
+        f"ssh-keygen -t rsa -f /home/{user}/.ssh/id_rsa -q -N ''".split(" "),
+    )
+    subprocess.run(
+        'sudo curl -L https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64 -o /usr/local/bin/docker-compose'.split(
+            " "
+        ),
+        check=True,
+    )
+    subprocess.run("sudo chmod +x /usr/local/bin/docker-compose".split(" "), check=True)
+    subprocess.run(f"sudo chsh -s /usr/bin/zsh {user}".split(" "), check=True)
+    inp = subprocess.run(
+        "wget https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh -O -".split(
+            " "
+        ),
+        check=True,
+    )
+    subprocess.run("zsh", input=inp.stdout, check=True)
+    subprocess.run(
+        f"cp /home/{user}/.oh-my-zsh/templates/zshrc.zsh-template /home/{user}/.zshrc".split(
+            " "
+        ),
+        check=True,
+    )
+
+
+def main():
+    download_app()
+    delete_app()
+    modify_settings()
+    do_thing()
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except:
+        traceback.print_exc()
+
+'''
+to do:
+- automate docker
+- automate alias
+	alias hrc="vim ~/.zshrc"
+	alias re="source ~/.zshrc"
+	alias idc="clear"
+	alias tt="git status"
+- repair zsh installation suck
+'''
